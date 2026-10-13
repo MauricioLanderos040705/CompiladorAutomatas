@@ -1,0 +1,23 @@
+name: Verificar Java
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '11'
+      - name: Compilar desde el codigo fuente
+        run: javac -encoding UTF-8 --release 11 -d out Main.java PruebaAutomata.java PruebaNumeros.java PruebaIntegracion.java
+      - name: Verificar automatas, simbolos y coloreado
+        run: java -Djava.awt.headless=true -cp out PruebaIntegracion
+

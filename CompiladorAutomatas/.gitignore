@@ -1,0 +1,9 @@
+/out/
+*.class
+/data/*.dat
+.DS_Store
+Thumbs.db
+/.idea/
+/.vscode/
+*.iml
+
