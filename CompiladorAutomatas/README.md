@@ -1,202 +1,77 @@
-# Compilador de Lenguajes y Automatas
+# Compilador de Lenguajes y Autómatas
 
-Primer avance en Java y Swing. El lenguaje usa palabras reservadas con tema
-de tacos y salsas. El programa realiza analisis lexico: separa tokens, reconoce
-identificadores y numeros con AFD, guarda simbolos y muestra errores.
+En este proyecto hicimos una app en Java con una interfaz en Swing para ver cómo se analiza el código de un lenguaje. Usamos palabras relacionadas con tacos y salsas como palabras reservadas. La idea es escribir código, analizarlo y revisar qué elementos reconoce la app y dónde encuentra errores.
 
-## Ejecutar
+## Cómo se usa la app
 
-Se necesita un JDK 11 o superior. No hay dependencias externas.
-Desde la carpeta raiz, en Terminal, PowerShell o una terminal de VS Code:
+Al abrirla, tenemos un editor a la izquierda para escribir el código. También podemos cargar un archivo de texto desde **Archivo > Abrir archivo...**. Mientras escribimos, las palabras reservadas se resaltan en naranja y negritas. En la parte de abajo se muestra la línea y la columna donde está el cursor.
 
-```sh
-javac -encoding UTF-8 --release 11 -d out Main.java PruebaAutomata.java PruebaNumeros.java PruebaIntegracion.java
-java -cp out Main
-```
+Para analizar el texto, presionamos el botón **Compilar**, usamos **F5** o elegimos **Análisis > Compilar**. Los resultados aparecen en las pestañas de la derecha y los errores se muestran en el panel de abajo. Si corregimos el código, hay que volver a compilar para actualizar esos resultados.
 
-La carpeta `out` se genera al compilar. El programa crea su tabla en `data`
-al iniciar. Estas carpetas generadas no se suben a Git.
+## Qué pasa al presionar Compilar
 
-## Verificar
+Primero, la app separa el texto en partes llamadas **tokens**. Por ejemplo, en `cantidad = 3;` reconoce `cantidad`, `=`, `3` y `;` por separado. Cada token tiene un tipo, una línea y una columna para saber dónde aparece en el código.
 
-```sh
-java -cp out PruebaAutomata
-java -cp out PruebaNumeros
-java -Djava.awt.headless=true -cp out PruebaIntegracion
-```
+Los tokens se clasifican como palabras reservadas, identificadores, números, operadores o delimitadores. Los caracteres que la app no reconoce se marcan como desconocidos. Los espacios y saltos de línea no aparecen como tokens, pero sí se toman en cuenta para ubicar cada elemento.
 
-Las primeras dos pruebas imprimen ejemplos. `PruebaIntegracion` comprueba
-resultados automaticamente y falla si encuentra una regresion. Usa un archivo
-temporal propio y no cambia la tabla de simbolos de la aplicacion.
+Después se revisan los identificadores y los números con **autómatas finitos deterministas (AFD)**. Estos recorren cada texto carácter por carácter para comprobar si cumple las reglas. Si un identificador o un número no es válido, se registra un error.
 
-GitHub Actions ejecutara la compilacion y esta prueba en cada subida y pull
-request cuando el proyecto se publique en GitHub con Actions habilitado.
-Eso verifica el codigo y componentes del editor sin abrir la ventana completa.
+En la pestaña **Tokens** podemos ver todas las apariciones de cada elemento, aunque se repita. La **Tabla de símbolos**, en cambio, guarda las palabras reservadas y los identificadores y números válidos sin repetirlos. Al iniciar la app ya aparecen las 12 palabras reservadas; al compilar se agregan los demás símbolos en el orden en que se encuentran.
 
-## Estructura
+La tabla también se guarda en `data/Tabla de símbolos.dat`. Cada compilación vuelve a crearla con los datos del código que estamos analizando.
 
-| Ubicacion | Responsabilidad |
+El panel **Errores** muestra el tipo de error, una descripción y su línea y columna. Por ejemplo, podemos ver errores por números mal escritos, identificadores demasiado largos o símbolos como `@`. También aparece un resumen con la cantidad de errores, o el mensaje **Sin errores** si no se encontró ninguno.
+
+## Palabras reservadas del lenguaje
+
+Elegimos estos nombres para representar los tipos de datos y las estructuras de control:
+
+| Palabra | Equivalente |
 | --- | --- |
-| `Main.java` | Iniciar la aplicacion en el hilo de Swing |
-| `view/` | Editor, menus, tablas y panel de errores |
-| `controller/` | Conectar acciones y leer archivos |
-| `model/lexer/` | Separar tokens manualmente y guardar sus posiciones |
-| `model/automata/` | Reconocer identificadores y numeros |
-| `model/keywords/` | Palabras reservadas y coloreado |
-| `model/symboltable/` | Simbolos y archivo de acceso aleatorio |
-| `model/compiler/` | Coordinar el analisis |
-| `model/errors/` | Registrar y describir errores |
+| `tacoBistec` | `int` |
+| `tacoChorizo` | `float` |
+| `tacoPastor` | `double` |
+| `tacoSuadero` | `char` |
+| `tacoCabeza` | `string` |
+| `tacoPapa` | `boolean` |
+| `tacoAdobado` | `void` |
+| `guacamole` | `if` |
+| `picoGallo` | `else` |
+| `salsaVerde` | `while` |
+| `salsaRoja` | `for` |
+| `salsaAmarilla` | `do` |
 
-## Reglas actuales
+Por ahora, la app reconoce estas palabras y las resalta. Todavía no comprueba que los tipos de datos o las estructuras de control se usen correctamente.
 
-- Se distinguen mayusculas de minusculas.
-- Un identificador inicia con letra ASCII o guion bajo. Despues admite letras
-  ASCII, guion bajo y digitos. El limite es de 40 caracteres.
-- Un numero admite enteros y decimales con signo negativo opcional. Debe tener
-  digitos antes del punto y, si tiene punto, tambien despues. Su limite total
-  es de 40 caracteres. `.5` y `5.` se rechazan.
-- El lexer distingue un signo negativo de una resta segun el token anterior.
-- Las 12 reservadas se cargan primero, en su orden de definicion. Despues se
-  agregan identificadores y numeros validos en su primera aparicion.
-- Un lexema repetido no crea otro registro. Cada compilacion reinicia la tabla.
-- Cada registro del archivo ocupa 92 bytes. Se puede leer directamente por ID.
+## Un ejemplo
 
-Las reglas y transiciones son las que ya implemento el equipo. Todavia no hay
-analisis sintactico o semantico, ni soporte especial para cadenas o comentarios.
-El reporte academico solicitado en la consigna se prepara aparte de esta guia.
+Podemos escribir esto en el editor y presionar **Compilar**:
 
-## Correcciones de este avance
+```text
+tacoBistec cantidad = 3;
+tacoChorizo precio = 12.5;
+cantidad = cantidad - 1;
+```
 
-| Archivo | Cambio |
+En la primera línea se reconocen estos tokens:
+
+| Texto | Tipo |
 | --- | --- |
-| `model/symboltable/SymbolTable.java` | Buscar en la lista en lugar de usar HashMap; conservar orden y duplicados |
-| `model/keywords/ReservedWords.java` | Comparar secuencialmente las palabras, sin HashSet |
-| `model/keywords/KeywordHighlighter.java` | Colorear los tokens reservados del mismo Lexer, sin expresiones regulares |
-| `view/ErrorPanel.java` | Mover aqui la clase que antes estaba en model/errors, para coincidir con su package |
+| `tacoBistec` | Palabra reservada |
+| `cantidad` | Identificador |
+| `=` | Operador |
+| `3` | Número |
+| `;` | Delimitador |
 
-El coloreado usa linea y columna para ubicar cada token dentro del documento.
-Por ejemplo, `2tacoBistec` se mantiene como candidato numerico invalido y no
-colorea `tacoBistec` por separado.
+En la tabla de símbolos se agregan `cantidad`, `3`, `precio`, `12.5` y `1`, además de las palabras reservadas que ya estaban cargadas. Aunque `cantidad` aparece varias veces, solo tiene un registro en esa tabla. El `-` de la última línea se reconoce como una resta.
 
-## Subir por primera vez a GitHub
+Si cambiamos `12.5` por `12.`, la app muestra un error porque falta un dígito después del punto decimal.
 
-Git guarda el historial en tu computadora. GitHub aloja el repositorio para
-compartirlo y revisar propuestas de cambios.
+## Reglas que se revisan en esta 
 
-1. Crea en GitHub un repositorio llamado, por ejemplo, `CompiladorAutomatas`.
-   Puede ser privado. Dejalo vacio, sin README, licencia ni gitignore, porque
-   esta carpeta ya incluye archivos preparados.
-2. Entra a esta carpeta desde la terminal. En la computadora de Mau:
+- Se distinguen mayúsculas y minúsculas: `tacoBistec` es una palabra reservada, pero `TacoBistec` se reconoce como identificador.
+- Los identificadores empiezan con una letra de `A` a `Z`, de `a` a `z` o con `_`. Después pueden llevar esas mismas letras, guion bajo y dígitos. Su límite es de 40 caracteres.
+- Se aceptan números enteros y decimales, incluidos negativos como `-8` y `-2.5`. El signo debe estar junto al número y la app usa el token anterior para distinguirlo de una resta.
+- Los decimales deben tener dígitos antes y después del punto. Por eso `.5` y `5.` se rechazan. Los números también tienen un límite de 40 caracteres, contando el signo y el punto.
 
-   ```sh
-   cd /Users/mauriciolanderos/Desktop/CompiladorAutomatas
-   ```
-
-3. Inicializa y registra la primera version:
-
-   ```sh
-   git init -b main
-   git add .
-   git commit -m "Primer avance con correcciones y pruebas"
-   ```
-
-   Si Git solicita tu identidad, configura `git config user.name "Tu nombre"`
-   y `git config user.email "Tu correo de GitHub"` dentro de esta carpeta.
-   Usa el correo privado de GitHub si esa es tu preferencia. Repite el commit.
-
-4. Reemplaza `TU_USUARIO` por el propietario real del repositorio y conecta
-   la direccion que GitHub muestra en su boton Code:
-
-   ```sh
-   git remote add origin https://github.com/TU_USUARIO/CompiladorAutomatas.git
-   git push -u origin main
-   ```
-
-   Autenticate mediante GitHub Desktop, GitHub CLI o SSH; la contrasena normal
-   de la cuenta no sirve para subir codigo por HTTPS. Con GitHub CLI instalado,
-   usa `gh auth login` y `gh auth setup-git`. No compartan credenciales.
-
-5. En GitHub, abre Settings > Collaborators, invita a tu companero y pidele
-   que acepte. Cada quien usa su propia cuenta.
-
-Estos pasos siguen la [guia oficial para subir codigo local](https://docs.github.com/en/migrations/importing-source-code/using-the-command-line-to-import-source-code/adding-locally-hosted-code-to-github).
-La invitacion esta explicada en [acceso para colaboradores](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/repository-access-and-collaboration/inviting-collaborators-to-a-personal-repository).
-
-## El companero descarga su copia una sola vez
-
-Desde una carpeta donde quiera tener el proyecto, usando la direccion real:
-
-```sh
-git clone https://github.com/TU_USUARIO/CompiladorAutomatas.git
-cd CompiladorAutomatas
-```
-
-Desde entonces ambos trabajan sobre sus copias del mismo repositorio.
-
-## Una rama por tarea
-
-Revisa `git status` antes de cambiar de rama. Guarda o termina el trabajo
-pendiente antes de empezar otra tarea. Con la copia sin cambios pendientes:
-
-```sh
-git switch main
-git pull --ff-only
-git switch -c mejora/editor
-```
-
-Realiza el cambio, compila y ejecuta las pruebas. Revisa los archivos antes
-de registrarlos y subirlos:
-
-```sh
-git diff
-git status
-git add .
-git commit -m "Mejorar el editor"
-git push -u origin mejora/editor
-```
-
-En GitHub, abre un pull request desde `mejora/editor` hacia `main`. El otro
-integrante revisa el cambio y los resultados de Actions. Cuando este aprobado,
-integrenlo con Merge pull request. Los nuevos commits en esa rama actualizan
-el mismo pull request. [Referencia: GitHub flow](https://docs.github.com/en/get-started/using-github/github-flow).
-
-Despues de integrar, ambos actualizan su copia:
-
-```sh
-git switch main
-git pull --ff-only
-```
-
-Un conflicto aparece cuando los cambios de las ramas no se pueden combinar
-automaticamente. Revisen ambos cambios y resuelvanlo en la rama de trabajo
-antes de integrar. Eviten subir cambios a main directamente en el trabajo diario.
-
-## Trabajar con Codex y Claude Code
-
-Cada integrante abre su copia local del repositorio en su herramienta. La
-historia permite ver que cambio, quien lo propuso y sobre que version trabajo.
-Asignen tareas distintas y usen una rama por tarea, como `mejora/editor` y
-`mejora/errores`. Si usan varios agentes en una sola computadora, utilicen
-copias o worktrees separados.
-
-`AGENTS.md` contiene las reglas del proyecto para Codex. `CLAUDE.md` importa
-ese mismo archivo, para que Claude Code reciba las mismas convenciones.
-El acceso de los agentes depende de las credenciales y permisos que tenga
-cada integrante en su entorno.
-
-Para pedir una tarea con pull request:
-
-> Lee las instrucciones del proyecto. Crea una rama desde main actualizado,
-> implementa [tarea concreta] conservando las reglas del lenguaje y el patron
-> actual, ejecuta las pruebas, sube la rama y abre un pull request hacia main
-> con la descripcion del cambio y los resultados. Dejalo para revision del equipo.
-
-Los agentes pueden preparar cambios y abrir pull requests cuando tengan acceso
-al repositorio. Para hacerlo desde la terminal necesitan GitHub CLI instalado
-y autenticado; tambien pueden usar una integracion con GitHub disponible.
-Si no tienen esa conexion, pueden dejar los cambios locales y ustedes abrir
-el pull request desde GitHub.
-
-Fuentes: [OpenAI Docs sobre worktrees y pull requests](https://learn.chatgpt.com/docs/environments/git-worktrees),
-[Claude Code: flujos de trabajo](https://code.claude.com/docs/en/common-workflows),
-[Claude Code: instrucciones compartidas](https://code.claude.com/docs/en/memory).
+Esta versión realiza **análisis léxico**. Aunque el botón se llama Compilar, todavía no ejecuta el código ni revisa la sintaxis o el significado de las instrucciones. Tampoco reconoce cadenas entre comillas ni comentarios como elementos propios del lenguaje. Que aparezca **Sin errores** significa que pasó la revisión léxica, pero no asegura que sea un programa correcto.
