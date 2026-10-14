@@ -1,5 +1,4 @@
 import controller.MainController;
-
 import javax.swing.SwingUtilities;
 
 /**
